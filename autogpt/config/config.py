@@ -134,6 +134,16 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
     # Stable Diffusion
     sd_webui_auth: Optional[str] = None
 
+    @validator("plugins", each_item=True)
+    def validate_plugins(cls, p: AutoGPTPluginTemplate | Any):
+        assert issubclass(
+            p.__class__, AutoGPTPluginTemplate
+        ), f"{p} does not subclass AutoGPTPluginTemplate"
+        assert (
+            p.__class__.__name__ != "AutoGPTPluginTemplate"
+        ), f"Plugins must subclass AutoGPTPluginTemplate; {p} is a template instance"
+        return p
+
     def get_openai_credentials(self, model: str) -> dict[str, str]:
         credentials = {
             "api_key": self.openai_api_key,
@@ -146,17 +156,6 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
         return credentials
 
     def get_azure_credentials(self, model: str) -> dict[str, str]:
-    @validator("plugins", each_item=True)
-    def validate_plugins(cls, p: AutoGPTPluginTemplate | Any):
-        assert issubclass(
-            p.__class__, AutoGPTPluginTemplate
-        ), f"{p} does not subclass AutoGPTPluginTemplate"
-        assert (
-            p.__class__.__name__ != "AutoGPTPluginTemplate"
-        ), f"Plugins must subclass AutoGPTPluginTemplate; {p} is a template instance"
-        return p
-
-    def get_azure_kwargs(self, model: str) -> dict[str, str]:
         """Get the kwargs for the Azure API."""
 
         # Fix --gpt3only and --gpt4only in combination with Azure
